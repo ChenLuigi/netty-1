@@ -775,12 +775,18 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
 
         boolean inEventLoop = inEventLoop();
-        addTask(task);
         if (!inEventLoop) {
+            if (isShutdown()) {
+                reject();
+            }
+            addTask(task);
             startThread();
+
             if (isShutdown() && removeTask(task)) {
                 reject();
             }
+        } else {
+            addTask(task);
         }
 
         if (!addTaskWakesUp && wakesUpForTask(task)) {
